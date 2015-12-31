@@ -5,7 +5,7 @@ import (
 //    	"io"
 	"io/ioutil"
 	"log"
-	"strconv"
+//	"strconv"
 	"net/http"
 	"html/template"
 //	"net/url"
@@ -20,10 +20,22 @@ type Config struct {
 	Path	    string `json:"path"`
 }
 
-type List struct {
-    Name    string
-    Content []string
-//    Size []int
+type Files struct {
+	Name 	string
+	Size	int64
+	Path	string
+}
+
+type Folders struct {
+	Name 	string
+	Size	int64
+	Path	string
+}
+
+type Content struct {
+	Name    string
+	FolderList []Folders
+	FileList []Files
 }
 
 var config Config
@@ -51,32 +63,36 @@ func readConfig() Config {
 func home(w http.ResponseWriter, r *http.Request) {
 	config = readConfig()
 
-	var filename []string
-//	var size []int
-	var i int = 0
-
+	var content Content
+	var path string
 	files, _ := ioutil.ReadDir(config.Path + r.URL.Path)
-	for _, f := range files {
-		if f.IsDir() {
-			filename=append(filename,f.Name()+"/")
-//			size[i]=f.Size()
-		} else {
-			filename=append(filename,f.Name()+"\t\t("+strconv.FormatInt(f.Size(), 10)+")")
-       //                 size[i]=f.Size()
-		}
-		i+=1
+	if r.URL.Path != "/" {
+		path=r.URL.Path+"/"
+	} else {
+                path=""
 	}
-	list := List{"Welcome", filename}
+	for _, f := range files {
+		if f.Name()[0] != '.' {
+			if f.IsDir() {
+				folder := Folders{f.Name(), f.Size(), path+f.Name()}
+				content.FolderList=append(content.FolderList, folder)
+				log.Printf("%s", path)
+			} else {
+				file := Files{f.Name(), f.Size(), path+f.Name()}
+				content.FileList=append(content.FileList, file)
+			}
+		}
+	}
 	tmpl, err := template.ParseFiles("static/index.html")
 
     	if err != nil {
         	http.Error(w, err.Error(), http.StatusInternalServerError)
         	log.Printf(err.Error())
     	}
+	content.Name=r.URL.Path
 
-
-	log.Printf("%s", list)
-	tmpl.Execute(w, list)
+	log.Printf("%s", content)
+	tmpl.Execute(w, content)
 
 }
 
@@ -86,6 +102,7 @@ func main() {
 
 	http.HandleFunc(config.WebRoot + "/", home)
 	http.Handle(config.WebRoot + "/static/", http.StripPrefix(config.WebRoot + "/static", http.FileServer(http.Dir("static"))))
+	//http.Handle(config.WebRoot + config.Path, http.StripPrefix(config.WebRoot + config.Path, http.FileServer(http.Dir(config.Path))))
 
 	log.Printf("Starting HTTP server on %s\n", config.Listen)
 	log.Println(http.ListenAndServe(config.Listen, nil))
