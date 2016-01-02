@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Bootstrap 101 Template</title>
+    <title>goBrowser</title>
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
     <!--[if lt IE 9]>
       <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
@@ -40,18 +40,17 @@
 					<th class="hidden-xs hidden-sm">Action</th>
 				</thead>
 				<tbody>
-                                        <tr>    
-                                                <td><input type="checkbox"></td>
-                                                <td><span class="glyphicon glyphicon-folder-open" aria-hidden="true"> <a href={{.Name}}/..>../</a></span></td>
+					<tr>
+						<td><span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span></td>
+                                                <td><a href={{ .BackPath }}>../</a></td>
                                                 <td class="hidden-xs hidden-sm"></td>
                                                 <td class="hidden-xs hidden-sm">4096</td>
                                                 <td class="hidden-xs hidden-sm"></td>
-                                        </tr>
-
+					</tr>
                                     {{ range $content := .FolderList }}
                                         <tr>
-						<td><input type="checkbox"></td>
-						<td><span class="glyphicon glyphicon-folder-open" aria-hidden="true"> <a href={{ $content.Path }}>{{ $content.Name }}/</a></span></td>
+						<td><span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span></td>
+						<td><a href={{ $content.Path }}>{{ $content.Name }}/</a></td>
 						<td class="hidden-xs hidden-sm"></td>
 						<td class="hidden-xs hidden-sm">{{ $content.Size }}</td>
 						<td class="hidden-xs hidden-sm"></td>
@@ -59,8 +58,8 @@
                                     {{end}}
                                     {{ range $content := .FileList }}
 					<tr>
-						<td><input type="checkbox"></td>
-						<td><span class="glyphicon glyphicon-file" aria-hidden="true"> <a href={{ $content.Path }}>{{ $content.Name }}</a></span></td>
+						<td><span class="glyphicon glyphicon-file" aria-hidden="true"></span></td>
+						<td><a href={{ $content.Path }}>{{ $content.Name }}</a></td>
 						<td class="hidden-xs hidden-sm"></td>
 						<td class="hidden-xs hidden-sm">{{ $content.Size }}</td>
 						<td class="hidden-xs hidden-sm"></td>                           

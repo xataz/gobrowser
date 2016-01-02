@@ -1,17 +1,14 @@
 package main
 
 import (
-    	"fmt"
-//    	"io"
+	"fmt"
 	"io/ioutil"
 	"log"
-//	"strconv"
 	"net/http"
 	"html/template"
-//	"net/url"
 	"os"
-//	"path"
 	"encoding/json"
+	"path/filepath"
 )
 
 type Config struct {
@@ -21,13 +18,13 @@ type Config struct {
 }
 
 type Files struct {
-	Name 	string
+	Name	string
 	Size	int64
 	Path	string
 }
 
 type Folders struct {
-	Name 	string
+	Name	string
 	Size	int64
 	Path	string
 }
@@ -36,6 +33,7 @@ type Content struct {
 	Name    string
 	FolderList []Folders
 	FileList []Files
+	BackPath string
 }
 
 var config Config
@@ -60,40 +58,89 @@ func readConfig() Config {
 	return config
 }
 
+
+func f_isFile(path string) (isFile bool) {
+
+	f, err := os.Open(path)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	defer f.Close()
+	fi, err := f.Stat()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	switch mode := fi.Mode(); {
+		case mode.IsDir():
+			isFile = false
+		case mode.IsRegular():
+			isFile = true
+	}
+
+	return
+}
+
+func f_genBreadcrumb (path string) (breadcrumb []string) {
+	for path != "/" {
+		breadcrumb=append(breadcrumb, filepath.Base(path))
+		path=filepath.Dir(path)
+	}
+
+	return
+}
+
 func home(w http.ResponseWriter, r *http.Request) {
 	config = readConfig()
 
 	var content Content
 	var path string
 	files, _ := ioutil.ReadDir(config.Path + r.URL.Path)
+	var backPath string
+	var breadcrumb []string
+
+	backPath = filepath.Dir(r.URL.Path)
+	log.Printf("backPath %s", backPath)
+
 	if r.URL.Path != "/" {
 		path=r.URL.Path+"/"
 	} else {
                 path=""
 	}
-	for _, f := range files {
-		if f.Name()[0] != '.' {
-			if f.IsDir() {
-				folder := Folders{f.Name(), f.Size(), path+f.Name()}
-				content.FolderList=append(content.FolderList, folder)
-				log.Printf("%s", path)
-			} else {
-				file := Files{f.Name(), f.Size(), path+f.Name()}
-				content.FileList=append(content.FileList, file)
+
+	breadcrumb = f_genBreadcrumb(backPath)
+	for index, value := range breadcrumb {
+		log.Printf("bread %d : %s", index, value)
+	}
+	if f_isFile(config.Path + r.URL.Path) {
+		log.Printf("C'est un fichier")
+		w.Header().Set("Content-Disposition", "attachment; filename=\""+filepath.Base(config.Path + r.URL.Path)+"\"")
+		http.ServeFile(w, r, config.Path + r.URL.Path)
+	} else {
+		for _, f := range files {
+			if f.Name()[0] != '.' {
+				//log.Printf("Path %s : Base %s : Abs %s", path+f.Name(), filepath.Base(path+f.Name()), filepath.Dir(path+f.Name()))
+				if f.IsDir() {
+					folder := Folders{f.Name(), f.Size(), path+f.Name()}
+					content.FolderList=append(content.FolderList, folder)
+				} else {
+					file := Files{f.Name(), f.Size(), path+f.Name()}
+					content.FileList=append(content.FileList, file)
+				}
 			}
 		}
+		tmpl, err := template.ParseFiles("static/index.html")
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			log.Printf(err.Error())
+		}
+		content.Name=r.URL.Path
+		content.BackPath=filepath.Dir(r.URL.Path)
+		tmpl.Execute(w, content)
 	}
-	tmpl, err := template.ParseFiles("static/index.html")
-
-    	if err != nil {
-        	http.Error(w, err.Error(), http.StatusInternalServerError)
-        	log.Printf(err.Error())
-    	}
-	content.Name=r.URL.Path
-
-	log.Printf("%s", content)
-	tmpl.Execute(w, content)
-
 }
 
 
