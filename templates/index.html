@@ -35,34 +35,21 @@
 				<thead>
 					<th>#</th>
 					<th>Name</th>
-					<th class="hidden-xs hidden-sm">Permission</th>
 					<th class="hidden-xs hidden-sm">Size</th>
-					<th class="hidden-xs hidden-sm">Action</th>
 				</thead>
-				<tbody>
-					<tr>
-						<td><span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span></td>
-                                                <td><a href={{ .BackPath }}>../</a></td>
-                                                <td class="hidden-xs hidden-sm"></td>
-                                                <td class="hidden-xs hidden-sm">4096</td>
-                                                <td class="hidden-xs hidden-sm"></td>
-					</tr>
+				<tbody> 
                                     {{ range $content := .FolderList }}
                                         <tr>
 						<td><span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span></td>
 						<td><a href={{ $content.Path }}>{{ $content.Name }}/</a></td>
-						<td class="hidden-xs hidden-sm"></td>
 						<td class="hidden-xs hidden-sm">{{ $content.Size }}</td>
-						<td class="hidden-xs hidden-sm"></td>
 					</tr>
                                     {{end}}
                                     {{ range $content := .FileList }}
 					<tr>
 						<td><span class="glyphicon glyphicon-file" aria-hidden="true"></span></td>
 						<td><a href={{ $content.Path }}>{{ $content.Name }}</a></td>
-						<td class="hidden-xs hidden-sm"></td>
 						<td class="hidden-xs hidden-sm">{{ $content.Size }}</td>
-						<td class="hidden-xs hidden-sm"></td>                           
                         		</tr>
 			            {{end}}
                                 </tbody>

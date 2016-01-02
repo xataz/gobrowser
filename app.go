@@ -9,23 +9,25 @@ import (
 	"os"
 	"encoding/json"
 	"path/filepath"
+	"strconv"
 )
 
 type Config struct {
 	Listen      string `json:"listen"`
 	WebRoot	    string `json:"webroot"`
 	Path	    string `json:"path"`
+	HiddenFile  bool `json:"hiddenfile"`
 }
 
 type Files struct {
 	Name	string
-	Size	int64
+	Size	string
 	Path	string
 }
 
 type Folders struct {
 	Name	string
-	Size	int64
+	Size	string
 	Path	string
 }
 
@@ -33,7 +35,6 @@ type Content struct {
 	Name    string
 	FolderList []Folders
 	FileList []Files
-	BackPath string
 }
 
 var config Config
@@ -48,7 +49,7 @@ type SuccessMessage struct {
 }
 
 func readConfig() Config {
-	file, _ := os.Open("server.conf")
+	file, _ := os.Open("app.conf")
 	decoder := json.NewDecoder(file)
 	config := Config{}
 	err := decoder.Decode(&config)
@@ -58,6 +59,27 @@ func readConfig() Config {
 	return config
 }
 
+func convBytes(value int64) (result string) {
+	var unit string
+	unit="B"
+	if value >= 1024 && value < 1024*1024 {
+		value=value/1024
+		unit="KB"
+	} else if value >= 1024*1024 && value < 1024*1024*1024 {
+		value=value/1024/1024
+		unit="MB"
+	} else if value >= 1024*1024*1024 && value < 1024*1024*1024*1024 {
+		value=value/1024/1024/1024
+		unit="GB"
+	} else if value >= 1024*1024*1024*1024 {
+		value=value/1024/1024/1024/1024
+		unit="TB"
+	}
+
+	result=strconv.FormatInt(value, 10)+" "+unit
+
+	return
+}
 
 func f_isFile(path string) (isFile bool) {
 
@@ -83,62 +105,60 @@ func f_isFile(path string) (isFile bool) {
 	return
 }
 
-func f_genBreadcrumb (path string) (breadcrumb []string) {
-	for path != "/" {
-		breadcrumb=append(breadcrumb, filepath.Base(path))
-		path=filepath.Dir(path)
-	}
-
-	return
-}
-
 func home(w http.ResponseWriter, r *http.Request) {
 	config = readConfig()
 
 	var content Content
 	var path string
-	files, _ := ioutil.ReadDir(config.Path + r.URL.Path)
+	var realPath string
 	var backPath string
-	var breadcrumb []string
+
+	path = r.URL.Path
+	realPath = r.URL.Path[len(config.WebRoot):]
+	files, _ := ioutil.ReadDir(config.Path + realPath)
 
 	backPath = filepath.Dir(r.URL.Path)
-	log.Printf("backPath %s", backPath)
-
-	if r.URL.Path != "/" {
-		path=r.URL.Path+"/"
-	} else {
-                path=""
+	log.Printf("RealPath : %s, Url.path : %s, backPath : %s", realPath, r.URL.Path, backPath)
+	if realPath != "/" {
+		folder := Folders{"..", "4 KB", backPath}
+		content.FolderList=append(content.FolderList, folder)
 	}
 
-	breadcrumb = f_genBreadcrumb(backPath)
-	for index, value := range breadcrumb {
-		log.Printf("bread %d : %s", index, value)
-	}
-	if f_isFile(config.Path + r.URL.Path) {
-		log.Printf("C'est un fichier")
-		w.Header().Set("Content-Disposition", "attachment; filename=\""+filepath.Base(config.Path + r.URL.Path)+"\"")
-		http.ServeFile(w, r, config.Path + r.URL.Path)
+	if f_isFile(config.Path + realPath) {
+		w.Header().Set("Content-Disposition", "attachment; filename=\""+filepath.Base(config.Path + path)+"\"")
+		http.ServeFile(w, r, config.Path + realPath)
 	} else {
+		if path != "/" {
+			path=path+"/"
+		}
 		for _, f := range files {
-			if f.Name()[0] != '.' {
-				//log.Printf("Path %s : Base %s : Abs %s", path+f.Name(), filepath.Base(path+f.Name()), filepath.Dir(path+f.Name()))
+			if ! config.HiddenFile {
+				if f.Name()[0] != '.' {
+					if f.IsDir() {
+						folder := Folders{f.Name(), convBytes(f.Size()), path+f.Name()}
+						content.FolderList=append(content.FolderList, folder)
+					} else {
+						file := Files{f.Name(), convBytes(f.Size()), path+f.Name()}
+						content.FileList=append(content.FileList, file)
+					}
+				}
+			} else {
 				if f.IsDir() {
-					folder := Folders{f.Name(), f.Size(), path+f.Name()}
+					folder := Folders{f.Name(), convBytes(f.Size()), path+f.Name()}
 					content.FolderList=append(content.FolderList, folder)
 				} else {
-					file := Files{f.Name(), f.Size(), path+f.Name()}
+					file := Files{f.Name(), convBytes(f.Size()), path+f.Name()}
 					content.FileList=append(content.FileList, file)
 				}
 			}
 		}
-		tmpl, err := template.ParseFiles("static/index.html")
+		tmpl, err := template.ParseFiles("templates/index.html")
 
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			log.Printf(err.Error())
 		}
-		content.Name=r.URL.Path
-		content.BackPath=filepath.Dir(r.URL.Path)
+		content.Name=realPath
 		tmpl.Execute(w, content)
 	}
 }
@@ -148,10 +168,8 @@ func main() {
 	config = readConfig()
 
 	http.HandleFunc(config.WebRoot + "/", home)
-	http.Handle(config.WebRoot + "/static/", http.StripPrefix(config.WebRoot + "/static", http.FileServer(http.Dir("static"))))
-	//http.Handle(config.WebRoot + config.Path, http.StripPrefix(config.WebRoot + config.Path, http.FileServer(http.Dir(config.Path))))
 
-	log.Printf("Starting HTTP server on %s\n", config.Listen)
+	log.Printf("Starting goBrowser on %s\n", config.Listen)
 	log.Println(http.ListenAndServe(config.Listen, nil))
 }
 
