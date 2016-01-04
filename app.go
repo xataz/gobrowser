@@ -265,7 +265,7 @@ func viewshare(w http.ResponseWriter, r *http.Request) {
         tmpl.Execute(w, fileShare)
         return
     }
-    filePath := string(dat)
+    filePath := filepath.Base(string(dat))
     
     tmpl, err := template.ParseFiles("templates/share.html")
     if err != nil {
@@ -273,7 +273,7 @@ func viewshare(w http.ResponseWriter, r *http.Request) {
         log.Printf(err.Error())
     }
     
-    UrlPath := config.WebRoot+"/getshare/"+fileShare
+    UrlPath := config.WebRoot+"/getshare"+fileShare
     
     share := Share{filePath, UrlPath}
     tmpl.Execute(w, share)
