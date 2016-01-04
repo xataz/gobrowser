@@ -60,14 +60,7 @@
 						<td><span class="glyphicon glyphicon-file" aria-hidden="true"></span></td>
 						<td><a href={{ $content.Path }}>{{ $content.Name }}</a></td>
 						<td class="hidden-xs hidden-sm">{{ $content.Size }}</td>
-						<td class="hidden-xs hidden-sm">
-                                                    <a href={{ $content.Path }} label="download">
-                                                        <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
-                                                    </a>   
-                                                    <a href="javascript:void(0)" onclick="CreateShare('{{$content.Path}}')">
-                                                        <span class="glyphicon glyphicon-share" aria-hidden="true"></span>
-                                                    </a>
-                                                </td>
+						<td class="hidden-xs hidden-sm"><a href={{ $content.Path }} alt="download"><span class="glyphicon glyphicon-download" aria-hidden="true"></span></a> <span class="glyphicon glyphicon-share" aria-hidden="true"></span></td>
                         		</tr>
 			            {{end}}
                                 </tbody>
@@ -79,17 +72,5 @@
 	</div>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
-    <script>
-        function CreateShare(file) {
-            $.ajax({
-                url : {{.WebRoot}}+'/createshare'+file,
-                dataType : 'html',
-                success : function(code_html, statut){
-                    alert(code_html);
-                }
-            });
-            
-        }
-    </script>
   </body>
 </html>
