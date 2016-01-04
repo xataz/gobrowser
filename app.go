@@ -214,8 +214,7 @@ func createshare(w http.ResponseWriter, r *http.Request) {
     
     fileShare := r.URL.Path[len(config.WebRoot+"/createshare"+config.WebRoot):]
     fileShare = config.Path + fileShare
-    _, errRead := ioutil.ReadFile(fileShare)
-    if errRead != nil {
+    if _, err := os.Stat(fileShare); os.IsNotExist(err) {
         w.Write([]byte("Error"))
     }
     
