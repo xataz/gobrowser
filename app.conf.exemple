@@ -1,0 +1,6 @@
+{
+	"listen": "0.0.0.0:5000",
+	"webroot": "",
+	"path": "/home",
+	"hiddenfile": false
+}

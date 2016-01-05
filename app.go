@@ -11,6 +11,7 @@ import (
     "path/filepath"
     "strconv"
     "crypto/rand"
+    "flag"
 )
 
 type Config struct {
@@ -18,6 +19,7 @@ type Config struct {
     WebRoot     string `json:"webroot"`
     Path        string `json:"path"`
     HiddenFile  bool `json:"hiddenfile"`
+    ConfigFile  string
 }
 
 type Files struct {
@@ -45,8 +47,8 @@ type Share struct {
 
 var config Config
 
-func readConfig() Config {
-    file, _ := os.Open("app.conf")
+func readConfig(configfile string) Config {
+    file, _ := os.Open(configfile)
     decoder := json.NewDecoder(file)
     config := Config{}
     err := decoder.Decode(&config)
@@ -105,8 +107,6 @@ func f_isFile(path string) (isFile bool) {
 }
 
 func home(w http.ResponseWriter, r *http.Request) {
-    config = readConfig()
-
     var content Content
 
     path := r.URL.Path
@@ -169,7 +169,6 @@ func home(w http.ResponseWriter, r *http.Request) {
 }
 
 func getshare(w http.ResponseWriter, r *http.Request) {
-    config = readConfig()
     //path := r.URL.Path
     fileShare := r.URL.Path[len(config.WebRoot+"/getshare"):]
     
@@ -202,8 +201,6 @@ func getshare(w http.ResponseWriter, r *http.Request) {
 }
 
 func createshare(w http.ResponseWriter, r *http.Request) {
-    config = readConfig()
-
     var Chars = []byte("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789")
     newLink := make([]byte, 32)
     rand.Read(newLink)
@@ -228,9 +225,6 @@ func createshare(w http.ResponseWriter, r *http.Request) {
 }
 
 func showshare(w http.ResponseWriter, r *http.Request) {
-    config = readConfig()
-    
-    
     shares, _ := ioutil.ReadDir("share")
     
     for _, f := range shares {
@@ -241,17 +235,10 @@ func showshare(w http.ResponseWriter, r *http.Request) {
 }
 
 func delshare(w http.ResponseWriter, r *http.Request) {
-    config = readConfig()
-    //var content Content
-    //var path string
-    //var urlPath string
-
-    log.Printf("delshare") 
+    log.Printf("delshare")
 }
 
 func viewshare(w http.ResponseWriter, r *http.Request) {
-    config = readConfig()
-    
     fileShare := r.URL.Path[len(config.WebRoot+"/share"):]
     
     dat, err := ioutil.ReadFile("share"+fileShare)
@@ -280,8 +267,34 @@ func viewshare(w http.ResponseWriter, r *http.Request) {
     log.Printf("viewshare")
 }
 
+
+func initFlag() {
+    Listen := flag.String("listen", "127.0.0.1:5000", "a string")
+    WebRoot := flag.String("webroot", "", "a string")
+    Path := flag.String("path", "/home", "a string")
+    HiddenFile := flag.Bool("hiddenfile", false, "a bool")
+    ConfigFile := flag.String("config", "app.conf", "a string") 
+
+    flag.Parse()
+    
+    config.Listen = *Listen
+    config.WebRoot = *WebRoot
+    config.Path = *Path
+    config.HiddenFile = *HiddenFile
+    config.ConfigFile = *ConfigFile
+    
+    
+    if _, err := os.Stat(config.ConfigFile); os.IsExist(err) {
+        log.Printf("configfile found !!!")
+        config = readConfig(config.ConfigFile)
+    }
+    
+    
+}
+
 func main() {
-    config = readConfig()
+    initFlag()
+    
 
     http.HandleFunc(config.WebRoot + "/", home)
     http.HandleFunc(config.WebRoot + "/share/", viewshare)
