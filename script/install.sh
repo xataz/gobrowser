@@ -8,7 +8,7 @@ OS=linux
 PWD_TMP=$(pwd)
 
 ## check root
-if [ $(who) != "root" ]; then
+if [ $(whoami) != "root" ]; then
 	echo "You must root for install gobrowser"
 	exit 1
 fi
