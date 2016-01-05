@@ -1,0 +1,12 @@
+[Unit]
+Description=Simple File Browser
+Documentation=https://github.com/xataz/gobrowser
+After=network.target
+
+[Service]
+Type=forking
+ExecStart=/usr/bin/gobrowser
+WorkingDirectory=/usr/etc/gobrowser
+
+[Install]
+WantedBy=multi-user.target
