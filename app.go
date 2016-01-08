@@ -19,7 +19,8 @@ type Config struct {
     WebRoot     string `json:"webroot"`
     Path        string `json:"path"`
     HiddenFile  bool `json:"hiddenfile"`
-    ConfigFile  string
+    ForceSSL    bool `json:"forcessl"`
+    ForceUrl    string `json:"forceurl"`
 }
 
 type Files struct {
@@ -43,6 +44,17 @@ type Content struct {
 type Share struct {
     Name        string
     Url        string
+    File    string
+}
+
+type ShareList struct {
+    List  []Share
+    WebRoot string
+}
+
+type ErrStruct struct {
+    File string
+    WebRoot string
 }
 
 var config Config
@@ -180,7 +192,8 @@ func getshare(w http.ResponseWriter, r *http.Request) {
             http.Error(w, err.Error(), http.StatusInternalServerError)
             log.Printf(err.Error())
         }
-        tmpl.Execute(w, fileShare)
+        Err := ErrStruct{fileShare, config.WebRoot}
+        tmpl.Execute(w, Err)
         return
     }
     filePath := string(dat)
@@ -191,7 +204,8 @@ func getshare(w http.ResponseWriter, r *http.Request) {
             http.Error(w, err.Error(), http.StatusInternalServerError)
             log.Printf(err.Error())
         }
-        tmpl.Execute(w, fileShare)
+        Err := ErrStruct{fileShare, config.WebRoot}
+        tmpl.Execute(w, Err)
         return
     }
     
@@ -202,7 +216,11 @@ func getshare(w http.ResponseWriter, r *http.Request) {
 
 func createshare(w http.ResponseWriter, r *http.Request) {
     var Chars = []byte("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789")
+    var HTTP string
+    if config.ForceUrl != "" { r.Host = config.ForceUrl }
+    if config.ForceSSL { HTTP = "https://" } else { HTTP = "http://" }
     newLink := make([]byte, 32)
+    
     rand.Read(newLink)
     for i, b := range newLink {
         newLink[i] = Chars[b % byte(len(Chars))]
@@ -212,30 +230,53 @@ func createshare(w http.ResponseWriter, r *http.Request) {
     fileShare := r.URL.Path[len(config.WebRoot+"/createshare"+config.WebRoot):]
     fileShare = config.Path + fileShare
     if _, err := os.Stat(fileShare); os.IsNotExist(err) {
-        w.Write([]byte("Error"))
+        w.Write([]byte("Error : File "+fileShare+" not found"))
+        return
+        
     }
     
     err := ioutil.WriteFile("share/"+s, []byte(fileShare), 0644)
     if err != nil {
         fmt.Println(err)
+        w.Write([]byte("Error : Cannot create share"))
+        return
     }
     
-    w.Write([]byte("Share Url : http://"+r.Host+config.WebRoot+"/share/"+s)) 
+    w.Write([]byte("Share Url : "+HTTP+r.Host+config.WebRoot+"/share/"+s)) 
     log.Printf("createshare %s", s) 
 }
 
-func showshare(w http.ResponseWriter, r *http.Request) {
+func listshares(w http.ResponseWriter, r *http.Request) {
     shares, _ := ioutil.ReadDir("share")
+    var HTTP string
+    
+    if config.ForceUrl != "" { r.Host = config.ForceUrl }
+    if config.ForceSSL { HTTP = "https://" } else { HTTP = "http://" }
+    var share []Share
     
     for _, f := range shares {
         dat, _ := ioutil.ReadFile("share/"+f.Name())
-        fmt.Println(r)
-        log.Printf("%s : %s", r.Host+config.WebRoot+"/getshare/"+f.Name(), string(dat))
+        shareTmp := Share{filepath.Base(string(dat)), HTTP+r.Host+config.WebRoot+"/share/"+f.Name(), f.Name()}
+        share=append(share, shareTmp)
+        log.Printf("%s", share)
     }
+    
+    sharelist := ShareList{share, config.WebRoot}
+    tmpl, _ := template.ParseFiles("templates/listshares.html")
+    tmpl.Execute(w, sharelist)
 }
 
 func delshare(w http.ResponseWriter, r *http.Request) {
-    log.Printf("delshare")
+    fileDel := r.URL.Path[len(config.WebRoot+"/delshare/"):]
+    
+    if _, err := os.Stat("share/"+fileDel); os.IsNotExist(err) {
+        w.Write([]byte("Error : File "+fileDel+" not found"))
+        return
+    }
+    
+    os.Remove("share/"+fileDel)
+    
+    w.Write([]byte("Share deleted"))
 }
 
 func viewshare(w http.ResponseWriter, r *http.Request) {
@@ -249,7 +290,8 @@ func viewshare(w http.ResponseWriter, r *http.Request) {
             http.Error(w, err.Error(), http.StatusInternalServerError)
             log.Printf(err.Error())
         }
-        tmpl.Execute(w, fileShare)
+        Err := ErrStruct{fileShare, config.WebRoot}
+        tmpl.Execute(w, Err)
         return
     }
     filePath := filepath.Base(string(dat))
@@ -262,7 +304,7 @@ func viewshare(w http.ResponseWriter, r *http.Request) {
     
     UrlPath := config.WebRoot+"/getshare"+fileShare
     
-    share := Share{filePath, UrlPath}
+    share := Share{filePath, UrlPath, ""}
     tmpl.Execute(w, share)
     log.Printf("viewshare")
 }
@@ -273,22 +315,27 @@ func initFlag() {
     WebRoot := flag.String("webroot", "", "a string")
     Path := flag.String("path", "/home", "a string")
     HiddenFile := flag.Bool("hiddenfile", false, "a bool")
-    ConfigFile := flag.String("config", "app.conf", "a string") 
+    ForceUrl := flag.String("forceurl", "", "a string")
+    ForceSSL := flag.Bool("forcessl", false, "a bool")
+    ConfigFile := flag.String("config", "", "a string") 
 
     flag.Parse()
-    
-    config.Listen = *Listen
-    config.WebRoot = *WebRoot
-    config.Path = *Path
-    config.HiddenFile = *HiddenFile
-    config.ConfigFile = *ConfigFile
-    
-    
-    if _, err := os.Stat(config.ConfigFile); os.IsExist(err) {
-        log.Printf("configfile found !!!")
-        config = readConfig(config.ConfigFile)
+ 
+    if *ConfigFile != "" {
+        if _, err := os.Stat(*ConfigFile); os.IsNotExist(err) {
+            log.Printf("Configfile not found !!!")
+        } else {
+            log.Printf("Configfile found !!!")
+            config = readConfig(*ConfigFile)
+        }
+    } else {
+        config.Listen = *Listen
+        config.WebRoot = *WebRoot
+        config.Path = *Path
+        config.HiddenFile = *HiddenFile
+        config.ForceUrl = *ForceUrl
+        config.ForceSSL = *ForceSSL
     }
-    
     
 }
 
@@ -298,7 +345,7 @@ func main() {
 
     http.HandleFunc(config.WebRoot + "/", home)
     http.HandleFunc(config.WebRoot + "/share/", viewshare)
-    http.HandleFunc(config.WebRoot + "/shareslist/", showshare)
+    http.HandleFunc(config.WebRoot + "/shareslist/", listshares)
     http.HandleFunc(config.WebRoot + "/createshare/", createshare)
     http.HandleFunc(config.WebRoot + "/getshare/", getshare)
     http.HandleFunc(config.WebRoot + "/delshare/", delshare)

@@ -1,6 +1,8 @@
 {
-	"listen": "0.0.0.0:5000",
-	"webroot": "",
-	"path": "/home",
-	"hiddenfile": false
+	"listen": "0.0.0.0:5001", // Bind address and listen port
+	"webroot": "", // WebRoot, for reverse proxy, (ex : /files)
+	"path": "/home", // Browser Path
+	"hiddenfile": false, // True for enable show hiddenfile
+        "forcessl": false, // For force ssl link
+        "forceurl": "" // For reverse proxy, force domain name (ex : mydomain.local)
 }
