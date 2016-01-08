@@ -33,6 +33,9 @@
                 td.size {
                     width: 10%;
                 }
+                td.type {
+                    width: 38px;
+                }
 	</style>
   </head>
   <body>
@@ -56,7 +59,7 @@
 		<div class="panel-body">
 			<table class="table table-striped table-hover">
 				<thead>
-					<th>#</th>
+					<th class="type">#</th>
 					<th>Name</th>
 					<th class="hidden-xs hidden-sm size">Size</th>
 					<th class="hidden-xs hidden-sm action">Action</th>
@@ -64,7 +67,7 @@
 				<tbody> 
                                     {{ range $content := .FolderList }}
                                         <tr>
-						<td><span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span></td>
+						<td class="type"><span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span></td>
 						<td><a href={{ $content.Path }}>{{ $content.Name }}/</a></td>
 						<td class="hidden-xs hidden-sm size"></td>
 						<td class="hidden-xs hidden-sm action"></td>
@@ -72,7 +75,7 @@
                                     {{end}}
                                     {{ range $content := .FileList }}
 					<tr>
-						<td><span class="glyphicon glyphicon-file" aria-hidden="true"></span></td>
+						<td class="type"><span class="glyphicon glyphicon-file" aria-hidden="true"></span></td>
 						<td><a href={{ $content.Path }}>{{ $content.Name }}</a></td>
 						<td class="hidden-xs hidden-sm size">{{ $content.Size }}</td>
 						<td class="hidden-xs hidden-sm action">
