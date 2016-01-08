@@ -28,19 +28,24 @@ Run with default option :
 ./app
 
 #### Argument
-  -config="": a string, choose a configfile
-  -forcessl=false: a bool, force https for share link
-  -forceurl="": a string, force domain for share link
-  -hiddenfile=false: a bool, enable hidden files
-  -listen="127.0.0.1:5000": a string, choose listen port and bind address
-  -path="/home": a string, choose root path for gobrowser
-  -webroot="": a string, choose webroot (ex : /files for access with http://mydomain/files)
+* config="": a string, choose a configfile
+* forcessl=false: a bool, force https for share link
+* forceurl="": a string, force domain for share link
+* hiddenfile=false: a bool, enable hidden files
+* listen="127.0.0.1:5000": a string, choose listen port and bind address
+* path="/home": a string, choose root path for gobrowser
+* webroot="": a string, choose webroot (ex : /files for access with http://mydomain/files)
 
+Example :
+```
+./app -hiddenfile -listen 0.0.0.0:8080 -path /home/user -webroot /files
+```
 
 #### configfile
-app.conf.exemple is a example of configfile
-Run with :
-`./app -config app.conf`
+app.conf.exemple is a example of configfile, run with :
+```
+./app -config app.conf
+```
 
 ### Init script
 I create an init script for systemd.
