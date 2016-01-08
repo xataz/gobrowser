@@ -65,7 +65,7 @@
                                         <tr>
 						<td><span class="glyphicon glyphicon-file" aria-hidden="true"></span></td>
 						<td><a href={{ $content.Url }}>{{ $content.Name }}</a></td>
-						<td class="hidden-xs hidden-sm">{{ $content.Url }}</td>
+						<td class="hidden-xs hidden-sm"><a href="{{ $content.Url }}">{{ $content.Url }}</a></td>
 						<td class="hidden-xs hidden-sm delete">
                                                     <a href="javascript:void(0)" onclick="DelShare('{{$content.File}}')" role="button" class="btn btn-raised btn-danger btn-xs">Delete</a>
                                                 </td>

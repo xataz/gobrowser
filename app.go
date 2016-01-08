@@ -45,6 +45,7 @@ type Share struct {
     Name        string
     Url        string
     File    string
+    WebRoot string
 }
 
 type ShareList struct {
@@ -256,7 +257,7 @@ func listshares(w http.ResponseWriter, r *http.Request) {
     
     for _, f := range shares {
         dat, _ := ioutil.ReadFile("share/"+f.Name())
-        shareTmp := Share{filepath.Base(string(dat)), HTTP+r.Host+config.WebRoot+"/share/"+f.Name(), f.Name()}
+        shareTmp := Share{filepath.Base(string(dat)), HTTP+r.Host+config.WebRoot+"/share/"+f.Name(), f.Name(), config.WebRoot}
         share=append(share, shareTmp)
         log.Printf("%s", share)
     }
@@ -304,9 +305,8 @@ func viewshare(w http.ResponseWriter, r *http.Request) {
     
     UrlPath := config.WebRoot+"/getshare"+fileShare
     
-    share := Share{filePath, UrlPath, ""}
+    share := Share{filePath, UrlPath, filePath, config.WebRoot}
     tmpl.Execute(w, share)
-    log.Printf("viewshare")
 }
 
 
