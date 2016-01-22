@@ -1,5 +1,8 @@
 # goBrowser
 
+## Build Status
+[![Build Status](https://travis-ci.org/xataz/gobrowser.svg?branch=dev)](https://travis-ci.org/xataz/gobrowser)
+
 ## What goBrowser
 goBrowser is a simple web application for list, download or share yours files.
 
