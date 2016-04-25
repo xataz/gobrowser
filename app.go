@@ -12,7 +12,6 @@ import (
     "strconv"
     "crypto/rand"
     "flag"
-    "net"
 )
 
 type Config struct {
@@ -358,9 +357,5 @@ func main() {
     }
 
     log.Printf("Starting goBrowser on %s\n", config.Listen)
-    l, err := net.Listen("tcp4", config.Listen)
-    if err != nil {
-        log.Fatal(err)
-    }
-    log.Println(http.ListenAndServe(l, nil))
+    log.Println(http.ListenAndServe(config.Listen, nil))
 }
