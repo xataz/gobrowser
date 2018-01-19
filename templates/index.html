@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -34,7 +35,7 @@
                     width: 10%;
                 }
                 td.type {
-                    width: 38px;
+                    width: 50px;
                 }
 	</style>
   </head>
@@ -67,15 +68,18 @@
 				<tbody> 
                                     {{ range $content := .FolderList }}
                                         <tr>
-						<td class="type"><span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span></td>
-						<td><a href={{ $content.Path }}>{{ $content.Name }}/</a></td>
-						<td class="hidden-xs hidden-sm size"></td>
-						<td class="hidden-xs hidden-sm action"></td>
-					</tr>
+                                                <td class="type"><span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span></td>
+                                                <td><a href={{ $content.Path }}>{{ $content.Name }}/</a></td>
+                                                <td class="hidden-xs hidden-sm size"></td>
+                                                <td class="hidden-xs hidden-sm action"></td>
+                                        </tr>
                                     {{end}}
                                     {{ range $content := .FileList }}
 					<tr>
-						<td class="type"><span class="glyphicon glyphicon-file" aria-hidden="true"></span></td>
+						<td class="type">
+                                                  <input id="checkBox" type="checkbox" name='{{ $content.Path }}'>
+                                                  <span class="glyphicon glyphicon-file" aria-hidden="true"></span>
+                                                </td>
 						<td><a href={{ $content.Path }}>{{ $content.Name }}</a></td>
 						<td class="hidden-xs hidden-sm size">{{ $content.Size }}</td>
 						<td class="hidden-xs hidden-sm action">
@@ -90,7 +94,11 @@
 			</table>
 		</div>
 
-		<div class="panel-footer">{{ .Name }}</div>
+		<div class="panel-footer">
+                  {{ .Name }}
+                  <a href="javascript:void(0)" onclick="createShareForTickedFiles()" role="button" class="btn btn-raised btn-success btn-xs" style="float: right;">Share the ticked files</a>
+                  <a href="javascript:void(0)" onclick="selectAllCheckboxes()" role="button" class="btn btn-raised btn-success btn-xs" style="margin-right: 2%; float: right;">Tick all the files</a>
+                </div>
 	</div>
 	</div>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
@@ -98,16 +106,44 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/0.5.7/js/material.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/0.5.7/js/ripples.min.js"></script>
     <script>
-        function CreateShare(file) {
+        function CreateShare(file, groupAlert=false) {
             $.ajax({
                 url : {{.WebRoot}}+'/createshare'+file,
                 dataType : 'html',
                 success : function(code_html, statut){
+                  if (! checkShareStatut(code_html)) {
                     alert(code_html);
+                  } else {
+                    if(! groupAlert) alert(code_html);
+                  }
                 }
             });
-            
+        }
+
+        function selectAllCheckboxes() {
+          $(':checkbox').each(function() {
+            if(this.checked){
+              this.checked = false;
+            } else {
+              this.checked = true;
+            }
+          });
+        }
+
+        function createShareForTickedFiles() {
+          $(':checkbox').each(function() {
+            if(this.checked) CreateShare(this.name, true);
+          });
+          protocol = window.location.protocol;
+          host = window.location.host;
+          alert('Go to ' + protocol + '://' + host + '/shareslist/ to see your share urls');
+        }
+
+        function checkShareStatut(msg) {
+          re = RegExp('share', 'gi');
+          return re.test(msg);
         }
     </script>
   </body>
 </html>
+
