@@ -65,7 +65,10 @@
 				<tbody> 
                                     {{ range $content := .List }}
                                         <tr>
-						<td><span class="glyphicon glyphicon-file" aria-hidden="true"></span></td>
+						<td class="type">
+              <input id="checkBox" type="checkbox" name='{{ $content.File }}'>
+              <span class="glyphicon glyphicon-file" aria-hidden="true"></span>
+            </td>
 						<td><a href={{ $content.Url }}>{{ $content.Name }}</a></td>
 						<td class="hidden-xs hidden-sm"><a href="{{ $content.Url }}">{{ $content.Url }}</a></td>
 						<td class="hidden-xs hidden-sm delete">
@@ -76,7 +79,11 @@
                                 </tbody>
 			</table>
 		</div>
-
+		<div class="panel-footer">
+      <span style="visibility:hidden;">>Shared file list</span>
+      <a href="javascript:void(0)" onclick="delShareForTickedFiles()" role="button" class="btn btn-raised btn-success btn-xs" style="float: right;">Delete the ticked shares</a>
+      <a href="javascript:void(0)" onclick="selectAllCheckboxes()" role="button" class="btn btn-raised btn-success btn-xs" style="margin-right: 2%; float: right;">Tick all the shares</a>
+    </div>
 	</div>
 	</div>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
@@ -85,18 +92,45 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/0.5.7/js/ripples.min.js"></script>
     <script src="https://cdn.rawgit.com/joequery/Stupid-Table-Plugin/master/stupidtable.min.js"></script>
     <script>
-        // Sort sharelistTable name column
-        $("#sharelistTable").stupidtable();
-
-        function DelShare(file) {
-            $.ajax({
-                url : {{.WebRoot}}+'/delshare/'+file,
-                dataType : 'html',
-                success : function(code_html, statut){
-                    alert(code_html);
-                    window.location.reload();
+        function DelShare(file, groupAlert=false) {
+          $.ajax({
+            url : {{.WebRoot}}+'/delshare/'+file,
+            dataType : 'html',
+            success : function(code_html, statut){
+              if (! checkShareStatut(code_html)) {
+                alert(code_html);
+                window.location.reload();
+              } else {
+                if(! groupAlert) {
+                  alert(code_html);
+                  window.location.reload();
                 }
-            });
+              }
+            }
+          });
+        }
+
+        function selectAllCheckboxes() {
+          $(':checkbox').each(function() {
+            if(this.checked){
+              this.checked = false;
+            } else {
+              this.checked = true;
+            }
+          });
+        }
+
+        function delShareForTickedFiles() {
+          $(':checkbox').each(function() {
+            if(this.checked) DelShare(this.name, true);
+          });
+          alert('The ticked shares are deleted');
+          window.location.reload();
+        }
+
+        function checkShareStatut(msg) {
+          re = RegExp('share', 'gi');
+          return re.test(msg);
         }
     </script>
   </body>
