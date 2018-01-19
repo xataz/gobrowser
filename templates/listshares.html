@@ -55,11 +55,11 @@
 	<div class="panel panel-primary">
 		<div class="panel-heading">Shared file list</div>
 		<div class="panel-body">
-			<table class="table table-striped table-hover">
+			<table id='sharelistTable' class="table table-striped table-hover">
 				<thead>
 					<th>#</th>
-					<th>Name</th>
-					<th class="hidden-xs hidden-sm">Url</th>
+					<th data-sort="string" data-sort-onload=yes>Name</th>
+					<th data-sort="string" class="hidden-xs hidden-sm">Url</th>
 					<th class="hidden-xs hidden-sm delete">Delete</th>
 				</thead>
 				<tbody> 
@@ -83,7 +83,11 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/0.5.7/js/material.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/0.5.7/js/ripples.min.js"></script>
+    <script src="https://cdn.rawgit.com/joequery/Stupid-Table-Plugin/master/stupidtable.min.js"></script>
     <script>
+        // Sort sharelistTable name column
+        $("#sharelistTable").stupidtable();
+
         function DelShare(file) {
             $.ajax({
                 url : {{.WebRoot}}+'/delshare/'+file,
@@ -93,7 +97,6 @@
                     window.location.reload();
                 }
             });
-            
         }
     </script>
   </body>
