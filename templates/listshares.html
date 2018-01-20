@@ -33,6 +33,9 @@
                 td.type {
                     width: 38px;
                 }
+		.selectTH:hover {
+                    cursor: pointer;
+		}
 	</style>
   </head>
   <body>
@@ -58,14 +61,17 @@
 			<table id='sharelistTable' class="table table-striped table-hover">
 				<thead>
 					<th>#</th>
-					<th data-sort="string" data-sort-onload=yes>Name</th>
-					<th data-sort="string" class="hidden-xs hidden-sm">Url</th>
+					<th data-sort="string" data-sort-onload=yes class="selectTH">Name</th>
+					<th data-sort="string" class="hidden-xs hidden-sm selectTH">Url</th>
 					<th class="hidden-xs hidden-sm delete">Delete</th>
 				</thead>
 				<tbody> 
                                     {{ range $content := .List }}
                                         <tr>
-						<td><span class="glyphicon glyphicon-file" aria-hidden="true"></span></td>
+						<td class="type">
+              <input id="checkBox" type="checkbox" name='{{ $content.File }}'>
+              <span class="glyphicon glyphicon-file" aria-hidden="true"></span>
+            </td>
 						<td><a href={{ $content.Url }}>{{ $content.Name }}</a></td>
 						<td class="hidden-xs hidden-sm"><a href="{{ $content.Url }}">{{ $content.Url }}</a></td>
 						<td class="hidden-xs hidden-sm delete">
@@ -76,7 +82,11 @@
                                 </tbody>
 			</table>
 		</div>
-
+		<div class="panel-footer">
+      <span style="visibility:hidden;">>Shared file list</span>
+      <a href="javascript:void(0)" onclick="delShareForTickedFiles()" role="button" class="btn btn-raised btn-danger btn-xs" style="float: right;">Delete the ticked shares</a>
+      <a href="javascript:void(0)" onclick="selectAllCheckboxes()" role="button" class="btn btn-raised btn-success btn-xs" style="margin-right: 2%; float: right;">Tick all the shares</a>
+    </div>
 	</div>
 	</div>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
@@ -88,15 +98,45 @@
         // Sort sharelistTable name column
         $("#sharelistTable").stupidtable();
 
-        function DelShare(file) {
-            $.ajax({
-                url : {{.WebRoot}}+'/delshare/'+file,
-                dataType : 'html',
-                success : function(code_html, statut){
-                    alert(code_html);
-                    window.location.reload();
+        function DelShare(file, groupAlert=false) {
+          $.ajax({
+            url : {{.WebRoot}}+'/delshare/'+file,
+            dataType : 'html',
+            success : function(code_html, statut){
+              if (! checkShareStatut(code_html)) {
+                alert(code_html);
+                window.location.reload();
+              } else {
+                if(! groupAlert) {
+                  alert(code_html);
+                  window.location.reload();
                 }
-            });
+              }
+            }
+          });
+        }
+
+        function selectAllCheckboxes() {
+          $(':checkbox').each(function() {
+            if(this.checked){
+              this.checked = false;
+            } else {
+              this.checked = true;
+            }
+          });
+        }
+
+        function delShareForTickedFiles() {
+          $(':checkbox').each(function() {
+            if(this.checked) DelShare(this.name, true);
+          });
+          alert('The ticked shares are deleted');
+          window.location.reload();
+        }
+
+        function checkShareStatut(msg) {
+          re = RegExp('share', 'gi');
+          return re.test(msg);
         }
     </script>
   </body>
