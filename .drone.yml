@@ -1,0 +1,17 @@
+pipeline:
+  build:
+    image: xataz/alpine:3.7
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    commands:
+      - apk add --no-cache docker bash
+      - docker build -t xataz/gobrowser .
+
+  publish:
+    image: xataz/alpine:3.7
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /home/xataz/.docker/config.json:/root/.docker/config.json
+    commands:
+      - apk add --no-cache docker bash
+      - docker push xataz/gobrowser

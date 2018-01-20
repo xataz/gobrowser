@@ -1,0 +1,22 @@
+#!/bin/sh
+
+addgroup -g ${GID} gobrowser
+adduser -h /app/gobrowser -s /bin/sh -G gobrowser -D -u ${UID} gobrowser
+
+chown -R gobrowser:gobrowser /app/gobrowser
+
+if [[ "${FORCE_SSL}" == "true" ]] || [[ "${FORCE_SSL}" == "enable" ]]; then
+    OPTS_GOBROWSER="${OPTS_GOBROWSER} -forcessl"
+fi
+if [[ "${HIDDEN_FILE}" == "true" ]] || [[ "${HIDDEN_FILE}" == "enable" ]]; then
+    OPTS_GOBROWSER="${OPTS_GOBROWSER} -hiddenfile"
+fi
+if [[ "${WEBROOT}" != "" ]]; then
+    OPTS_GOBROWSER="${OPTS_GOBROWSER} -webroot ${WEBROOT}"
+fi
+if [[ "${FORCE_URL}" != "" ]]; then
+    OPTS_GOBROWSER="${OPTS_GOBROWSER} -ForceUrl ${FORCE_URL}"
+fi
+
+cd /app/gobrowser
+exec su-exec gobrowser:gobrowser /sbin/tini -- /app/gobrowser/app -listen ${LISTEN} -path ${PATH_FILE}  ${OPTS_GOBROWSER}
