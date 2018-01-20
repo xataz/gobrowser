@@ -15,7 +15,7 @@ if [[ "${WEBROOT}" != "" ]]; then
     OPTS_GOBROWSER="${OPTS_GOBROWSER} -webroot ${WEBROOT}"
 fi
 if [[ "${FORCE_URL}" != "" ]]; then
-    OPTS_GOBROWSER="${OPTS_GOBROWSER} -ForceUrl ${FORCE_URL}"
+    OPTS_GOBROWSER="${OPTS_GOBROWSER} -forceUrl ${FORCE_URL}"
 fi
 
 cd /app/gobrowser
