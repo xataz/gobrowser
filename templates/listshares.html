@@ -69,13 +69,13 @@
                                     {{ range $content := .List }}
                                         <tr>
 						<td class="type">
-              <input id="checkBox" type="checkbox" name='{{ $content.File }}'>
+              <input id="checkBox" type="checkbox" name='{{ $content.Name }}'>
               <span class="glyphicon glyphicon-file" aria-hidden="true"></span>
             </td>
-						<td><a href={{ $content.Url }}>{{ $content.Name }}</a></td>
-						<td class="hidden-xs hidden-sm"><a href="{{ $content.Url }}">{{ $content.Url }}</a></td>
+						<td><a href={{ $content.ShareUrl }}>{{ $content.File }}</a></td>
+						<td class="hidden-xs hidden-sm"><a href="{{ $content.ShareUrl }}">{{ $content.ShareUrl }}</a></td>
 						<td class="hidden-xs hidden-sm delete">
-                                                    <a href="javascript:void(0)" onclick="DelShare('{{$content.File}}')" role="button" class="btn btn-raised btn-danger btn-xs">Delete</a>
+                                                    <a href="javascript:void(0)" onclick="DelShare('{{$content.Name}}')" role="button" class="btn btn-raised btn-danger btn-xs">Delete</a>
                                                 </td>
 					</tr>
                                     {{end}}
