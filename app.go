@@ -38,6 +38,7 @@ type Folders struct {
 type Content struct {
     Name        string
     WebRoot     string
+    Url         string
     FolderList  []Folders
     FileList    []Files
 }
@@ -85,16 +86,16 @@ func readShareFile(sharefile string) (Share, error) {
 }
 
 func writeShareFile(sharefile string, share Share) {
-   sharefileJSON, err := json.MarshalIndent(&share, "", "\t\t")
-   if err != nil {
-      fmt.Println("Error marshalling to JSON:", err)
-      return
-   }
-   err = ioutil.WriteFile(sharefile, sharefileJSON, 0644)
-   if err != nil {
-      fmt.Println("Error encoding JSON to sharefile:", err)
-      return
-   }
+  sharefileJSON, err := json.MarshalIndent(&share, "", "\t\t")
+  if err != nil {
+    fmt.Println("Error marshalling to JSON:", err)
+    return
+  }
+  err = ioutil.WriteFile(sharefile, sharefileJSON, 0644)
+  if err != nil {
+    fmt.Println("Error encoding JSON to sharefile:", err)
+    return
+  }
 }
 
 func convBytes(value float64) (result string) {
@@ -203,6 +204,7 @@ func home(w http.ResponseWriter, r *http.Request) {
         }
         content.Name=urlPath
         content.WebRoot=config.WebRoot
+        content.Url=config.ForceUrl
         tmpl.Execute(w, content)
     }
 }
@@ -338,7 +340,7 @@ func initFlag() {
     ConfigFile := flag.String("config", "", "a string") 
 
     flag.Parse()
- 
+
     if *ConfigFile != "" {
         if _, err := os.Stat(*ConfigFile); os.IsNotExist(err) {
             log.Printf("Configfile not found !!!")

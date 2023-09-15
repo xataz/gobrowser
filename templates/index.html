@@ -135,7 +135,7 @@
             if(this.checked) CreateShare(this.name, true);
           });
           protocol = window.location.protocol;
-          host = window.location.host;
+          host = {{.Url}} != "" ? {{.Url}} : window.location.host;
           alert('Go to ' + protocol + '://' + host + '/shareslist/ to see your share urls');
         }
 
